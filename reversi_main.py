@@ -11,6 +11,8 @@ agent = RL_QG_agent()
 # agent.load_model()
 
 max_epochs = 100
+bw = 0
+ww = 0
 
 for i_episode in range(max_epochs):
     observation = env.reset()
@@ -21,7 +23,7 @@ for i_episode in range(max_epochs):
 
         ################### 黑棋 ############################### 0表示黑棋
         #  这部分 黑棋 是随机下棋
-        env.render()  #  打印当前棋局
+        # env.render()  #  打印当前棋局
         enables = env.possible_actions
         if len(enables) == 0:
             action_ = env.board_size**2 + 1
@@ -31,13 +33,13 @@ for i_episode in range(max_epochs):
         action[1] = 0   # 黑棋 为 0
         observation, reward, done, info = env.step(action)
         ################### 白棋 ############################### 1表示白棋
-        env.render()
+        # env.render()
         enables = env.possible_actions
         # if nothing to do ,select pass
         if len(enables) == 0:
             action_ = env.board_size ** 2 + 1 # pass
         else:
-           action_  = agent.place(observation, enables,player) # 调用自己训练的模型
+           action_, probs  = agent.place(observation, enables, 1, t+1) # 调用自己训练的模型
 
         action[0] = action_
         action[1] = 1  # 白棋 为 1
@@ -49,7 +51,10 @@ for i_episode in range(max_epochs):
             black_score = len(np.where(env.state[0,:,:]==1)[0])
             if black_score >32:
                 print("黑棋赢了！")
+                bw += 1
             else:
                 print("白棋赢了！")
+                ww += 1
             print(black_score)
             break
+print(bw, ww)

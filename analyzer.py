@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from utils import *
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +17,7 @@ class analyzer:
         plt.bar(range(len(self.game_records)), [game.winner[1]/sum(game.winner)-0.5 for game in self.game_records])
         plt.ylim([-0.5, 0.5])
         plt.title("winning rate")
-        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/winning_rate.jpg')
+        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/winning_rate.png')
         plt.close()
 
     def plot_winning_ratio(self, file_name_no_suffix: str) -> None:
@@ -25,14 +27,14 @@ class analyzer:
         plt.bar(range(len(wins)), wins)
         plt.ylim([0, 100])
         plt.title('winning ratio by bins')
-        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/winning_ratio.jpg')
+        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/winning_ratio.png')
         plt.close()
 
     def plot_loss(self, file_name_no_suffix: str) -> None:
         losses = [epoch_info.loss for game in self.game_records for epoch_info in game.epochs]
         plt.bar(range(len(losses)), losses)
         plt.title("loss")
-        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/loss.jpg')
+        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/loss.png')
         plt.close()
 
     def plot_reward(self, file_name_no_suffix: str) -> None:
@@ -40,13 +42,13 @@ class analyzer:
         plt.bar(range(len(rewards)), rewards)
         plt.title("reward")
         plt.ylim([-2, 1])
-        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/reward.jpg')
+        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/reward.png')
         plt.close()
 
     def plot_turns(self, file_name_no_suffix: str) -> None:
         turns = [game.turns for game in self.game_records]
         plt.bar(range(len(turns)), turns)
         plt.title("turns")
-        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/turns.jpg')
+        plt.savefig(self.analyzer_dir + file_name_no_suffix + '/turns.png')
         plt.close()
 

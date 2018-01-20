@@ -7,6 +7,7 @@ from level1 import alpha_beta as ab
 
 env = gym.make('Reversi8x8-v0')
 
+agent = RL_QG_agent()
 max_epochs = 20
 
 w_win =0
@@ -34,7 +35,7 @@ for i_episode in range(max_epochs):
         action[1] = 0   # 黑棋 B  为 0
         observation, reward, done, info = env.step(action)
         ################### 白棋  W ############################### 1表示白棋
-        env.render()
+        # env.render()
         enables = env.possible_actions
         # if nothing to do ,select pass
         if len(enables) == 0:
@@ -48,7 +49,7 @@ for i_episode in range(max_epochs):
 
 
         if done: # 游戏 结束
-            env.render()
+            # env.render()
             black_score = len(np.where(env.state[0,:,:]==1)[0])
             if black_score >32:
                 print("黑棋赢了！")
@@ -58,4 +59,4 @@ for i_episode in range(max_epochs):
                 w_win += 1
             print(black_score)
             break
-    print("黑棋：",b_win,"  白棋 ",w_win)
+print("黑棋：",b_win,"  白棋 ",w_win)

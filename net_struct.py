@@ -18,7 +18,7 @@ class FCN:
         X = Input(self.input_shape, name='input1')
         flow = Dense(256, activation='sigmoid', input_shape=self.input_shape, name='dense1')(X)
         flow = Dense(128, activation='sigmoid', name='dense2')(flow)
-        action_probs = Dense(64, activation='sigmoid', name='dense3')(flow)
+        action_probs = Dense(64, activation='tanh', name='dense3')(flow)
         model = Model(input=X, output=action_probs)
         optimizer = rmsprop(lr=self.learning_rate)
         model.compile(loss='mean_squared_error', optimizer=optimizer)
