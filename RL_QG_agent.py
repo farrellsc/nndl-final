@@ -48,7 +48,7 @@ class RL_QG_agent:
         if enables == []:
             enables = list(range(action_probs.size))
         for i in range(action_probs.shape[0]):
-            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = 0
+            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = -2
         action = action_probs.argmax(axis=1)
         action_prob = action_probs[range(action_probs.shape[0]), action]
         return action, action_prob, action_probs
@@ -60,7 +60,7 @@ class RL_QG_agent:
         if enables == []:
             enables = list(range(action_probs.size))
         for i in range(action_probs.shape[0]):
-            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = 0
+            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = -2
         action = action_probs.argmax(axis=1)
         action_prob = action_probs[range(action_probs.shape[0]), action]
         return action, action_prob, action_probs
@@ -70,7 +70,7 @@ class RL_QG_agent:
             action = random.choice(enables)
             return action, []
         else:
-            action, action_prob, probs = self.__calc_dynamic_action(state, enables, player)
+            action, action_prob, probs = self.__calc_dynamic_action([state], [enables], player)
             # print("current,", action, action_prob, enables)
             return action, probs
 
