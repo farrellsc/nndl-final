@@ -42,9 +42,9 @@ class RL_QG_agent:
         self.__static_graph.model = clone_model(self.__dynamic_graph.model)
 
     def __calc_dynamic_action(self, state: np.array, enables: np.array, player: int) -> Tuple[np.array, np.array, np.array]:
-        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][1]])
+        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][0]])
         action_probs = self.__dynamic_graph.model.predict(state)
-        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][1]])
+        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][0]])
         if enables == []:
             enables = list(range(action_probs.size))
         for i in range(action_probs.shape[0]):
@@ -54,9 +54,9 @@ class RL_QG_agent:
         return action, action_prob, action_probs
 
     def __calc_static_action(self, state: np.array, enables: np.array, player: int) -> Tuple[np.array, np.array, np.array]:
-        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][1]])
+        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][0]])
         action_probs = self.__static_graph.model.predict(state)
-        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][1]])
+        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][0]])
         if enables == []:
             enables = list(range(action_probs.size))
         for i in range(action_probs.shape[0]):
@@ -120,7 +120,7 @@ class RL_QG_agent:
         r_d_action_probs[range(r_d_action_probs.shape[0]), r_d_action] = r_value
 
         # update dynamic graph
-        state_in_all = np.reshape(state_in_all, [-1, self.__params['NN']['input_shape'][1]])
+        state_in_all = np.reshape(state_in_all, [-1, self.__params['NN']['input_shape'][0]])
         history = self.__dynamic_graph.model.fit(state_in_all, r_d_action_probs, verbose=0)
         loss = history.history['loss'][0]
 
