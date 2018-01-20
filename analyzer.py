@@ -20,10 +20,10 @@ class analyzer:
 
     def plot_winning_ratio(self, file_name_no_suffix: str) -> None:
         wins = [1 if game.winner[1] > 32 else 0 for game in self.game_records]
-        wins = wins[:10*int(len(wins)/10)]
-        wins = np.sum(np.reshape(wins, [-1, 10]), axis=1)
+        wins = wins[:100*int(len(wins)/100)]
+        wins = np.sum(np.reshape(wins, [-1, 100]), axis=1)
         plt.bar(range(len(wins)), wins)
-        plt.ylim([0, 10])
+        plt.ylim([0, 100])
         plt.title('winning ratio by bins')
         plt.savefig(self.analyzer_dir + file_name_no_suffix + '/winning_ratio.jpg')
         plt.close()

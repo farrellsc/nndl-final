@@ -25,7 +25,7 @@ else:
     os.mkdir('./analyze/' + params['agent_name'] + '_' + params['hand'])
     print('training new agent...')
 
-for i_episode in range(params["max_epochs"]):
+for i_episode in tqdm(range(params["max_epochs"])):
     observation = env.reset()
     # observation  是 3 x 8 x 8 的 list,表示当前的棋局，具体定义在 reversi.py 中的 state
     current_game_info = gameInfo()
@@ -38,7 +38,7 @@ for i_episode in range(params["max_epochs"]):
             # black
             if params["display_board"]:
                 env.render()
-            enables = env.possible_actions
+            enables = np.array(env.possible_actions)
             action, probs = \
                 (env.board_size ** 2 + 1, None) if len(enables) == 0 else agent.place(observation, enables, 0, t+1)
             observation, reward, done, _ = env.step([action, 0])
@@ -68,29 +68,31 @@ for i_episode in range(params["max_epochs"]):
             if not done:
                 if params["display_board"]:
                     env.render()
-                enables = env.possible_actions
+                enables = np.array(env.possible_actions)
                 action, probs = \
                     (env.board_size ** 2 + 1, None) if len(enables) == 0 else agent.place(observation, enables, 0, t+1)
                 observation, reward, done, _ = env.step([action, 1])
                 loss = agent.learn((observation, action, reward, observation, done, enables))
                 current_game_info.set_epoch(loss)
                 if reward != 0: current_reward = reward
+
         if not done:
-            print("correct move")
+            # print("correct move")
+            pass
         if done and params["display_each_winner"]:
             black_score = len(np.where(env.state[0, :, :] == 1)[0])
             white_score = len(np.where(env.state[1, :, :] == 1)[0])
             current_game_info.set_winner(black_score, white_score)
             current_game_info.set_reward(current_reward)
             current_game_info.set_turns(t)
-            if current_reward == -100:
-                inval += 1
-                current_game_info.set_enable_rankings(enables, probs)
-                print(current_game_info.enable_ranking)
-                print("invalid place, you lost; black-white-invalid: {}-{}-{}".format(
-                    black_win, white_win, inval))
-                print('\n')
-            elif black_score > 32:
+            # if current_reward == -100:
+            #     inval += 1
+            #     current_game_info.set_enable_rankings(enables, probs)
+            #     print(current_game_info.enable_ranking)
+            #     print("invalid place, you lost; black-white-invalid: {}-{}-{}".format(
+            #         black_win, white_win, inval))
+            #     print('\n')
+            if black_score > 32:
                 black_win += 1
                 print("black wins: {}:{}; black-white-invalid: {}-{}-{}".format(
                     black_score, white_score, black_win, white_win, inval))
@@ -99,11 +101,12 @@ for i_episode in range(params["max_epochs"]):
                 print("white wins: {}:{}; black-white-invalid: {}-{}-{}".format(
                     black_score, white_score, black_win, white_win, inval))
             else:
+                print(black_score, white_score)
                 print("black-white-invalid: {}-{}-{}".format(black_win, white_win, inval))
             break
     agent.analyzer.insert_game_info(current_game_info)
 
-    if i_episode != 0 and i_episode % 20 == 0:
+    if i_episode != 0 and i_episode % 200 == 0:
         agent.agent_save_model(agent_name)
 
 print("you won {} in {} games".format(white_win, params["max_epochs"]))

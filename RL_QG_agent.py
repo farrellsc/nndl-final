@@ -41,55 +41,87 @@ class RL_QG_agent:
         )
         self.__static_graph.model = clone_model(self.__dynamic_graph.model)
 
-    def __calc_dynamic_action(self, state: np.array, enables: list, player: int) -> Tuple[int, float, list]:
-        state = np.reshape(state, [1, -1])
-        action_probs = self.__dynamic_graph.model.predict(state)[0]
+    def __calc_dynamic_action(self, state: np.array, enables: np.array, player: int) -> Tuple[np.array, np.array, np.array]:
+        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][1]])
+        action_probs = self.__dynamic_graph.model.predict(state)
+        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][1]])
         if enables == []:
             enables = list(range(action_probs.size))
-        # action_probs[~np.in1d(range(action_probs.shape[0]), enables)] = 0
-        action = action_probs.argmax()
-        return action, action_probs[action], action_probs
+        for i in range(action_probs.shape[0]):
+            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = 0
+        action = action_probs.argmax(axis=1)
+        action_prob = action_probs[range(action_probs.shape[0]), action]
+        return action, action_prob, action_probs
 
-    def __calc_static_action(self, state: np.array, enables: list, player: int) -> Tuple[int, float]:
-        state = np.reshape(state, [1, -1])
-        action_probs = self.__static_graph.model.predict(state)[0]
+    def __calc_static_action(self, state: np.array, enables: np.array, player: int) -> Tuple[np.array, np.array, np.array]:
+        state = np.reshape(state, [-1, self.__params['NN']['input_shape'][1]])
+        action_probs = self.__static_graph.model.predict(state)
+        action_probs = np.reshape(action_probs, [-1, self.__params['NN']['output_shape'][1]])
         if enables == []:
             enables = list(range(action_probs.size))
-        # action_probs[~np.in1d(range(action_probs.shape[0]), enables)] = 0
-        action = action_probs.argmax()
-        return action, action_probs[action]
+        for i in range(action_probs.shape[0]):
+            action_probs[i, ~np.in1d(range(action_probs.shape[1]), enables[i])] = 0
+        action = action_probs.argmax(axis=1)
+        action_prob = action_probs[range(action_probs.shape[0]), action]
+        return action, action_prob, action_probs
 
-    def place(self, state: np.array, enables: list, player: int, turn: int) -> Tuple[int, list]:
+    def place(self, state: np.array, enables: np.array, player: int, turn: int) -> Tuple[int, list]:
         if random.random() < self.__params['RL']['random_search']/turn:
             action = random.choice(enables)
             return action, []
         else:
             action, action_prob, probs = self.__calc_dynamic_action(state, enables, player)
-            print("current,", action, action_prob, enables)
+            # print("current,", action, action_prob, enables)
             return action, probs
 
-    def learn(self, state_tuple: Tuple[np.array, int, int, np.array, bool, list]) -> float:
-        random.shuffle(self.__experience_pool)
-        if len(self.__experience_pool) == self.__pool_size: _ = self.__experience_pool.pop(0)
+    # def learn(self, state_tuple: Tuple[np.array, int, int, np.array, bool, list]) -> float:
+    #     # random.shuffle(self.__experience_pool)
+    #     # if len(self.__experience_pool) == self.__pool_size: _ = self.__experience_pool.pop(0)
+    #     self.__experience_pool.append(state_tuple)
+    #     state_in, action, reward, state_out, done, enables = state_tuple
+    #
+    #     random_index = random.randint(0, len(self.__experience_pool) - 1)
+    #     r_state_in, r_action, r_reward, r_state_out, r_done, r_enables = self.__experience_pool[random_index]
+    #     r_action, r_action_prob, r_action_probs = self.__calc_static_action(r_state_out, r_enables, 1)
+    #     r_value = r_reward if r_done else r_reward + self.__params["RL"]['discount'] * r_action_prob
+    #     # print('experience,', r_value, r_action, r_enables)
+    #
+    #     r_d_action, r_d_action_prob, r_d_action_probs = self.__calc_dynamic_action(r_state_out, r_enables, 1)
+    #     r_d_action_probs[r_d_action] = r_value
+    #     r_d_action_probs = np.reshape(r_d_action_probs, [1, 64])
+    #
+    #     # update dynamic graph
+    #     state_in = np.reshape(state_in, [1, -1])
+    #     history = self.__dynamic_graph.model.fit(state_in, r_d_action_probs, verbose=0)
+    #     loss = history.history['loss'][0]
+    #
+    #     self.__iternum += 1
+    #     if self.__iternum % self.__params["RL"]['freeze_interval'] == 0:
+    #         self.__static_graph.model = clone_model(self.__dynamic_graph.model)
+    #     return loss
+
+    def learn(self, state_tuple: Tuple[np.array, int, int, np.array, bool, np.array]) -> float:
+        if len(self.__experience_pool) == self.__pool_size:
+            _ = self.__experience_pool.pop(random.randint(0, self.__pool_size - 1))
         self.__experience_pool.append(state_tuple)
-        state_in, action, reward, state_out, done, enables = state_tuple
 
-        random_index = random.randint(0, len(self.__experience_pool) - 1)
-        r_state_in, r_action, r_reward, r_state_out, r_done, r_enables = self.__experience_pool[random_index]
-        r_action, r_action_prob = self.__calc_static_action(r_state_out, r_enables, 1)
-        r_value = r_reward if r_done else r_reward + self.__params["RL"]['discount'] * r_action_prob
-        print('experience,', r_value, r_action, r_enables)
+        state_in_all = [x[0] for x in self.__experience_pool]
+        action_all = [x[1] for x in self.__experience_pool]
+        reward_all = [x[2] for x in self.__experience_pool]
+        state_out_all = [x[3] for x in self.__experience_pool]
+        done_all = [x[4] for x in self.__experience_pool]
+        enables_all = [x[5] for x in self.__experience_pool]
 
-        state_in = np.reshape(state_in, [1, -1])
-        r_target = self.__dynamic_graph.model.predict(state_in)
+        r_action, r_action_prob, r_action_probs = self.__calc_static_action(state_out_all, enables_all, 1)
+        r_value = np.array(reward_all) + self.__params['RL']['discount'] * r_action_prob
+        r_value[done_all] = np.array(reward_all)[done_all]
 
-        if r_reward < 0:
-            for one in r_enables:
-                r_target[0, one] += 100
+        r_d_action, r_d_action_prob, r_d_action_probs = self.__calc_dynamic_action(state_in_all, enables_all, 1)
+        r_d_action_probs[range(r_d_action_probs.shape[0]), r_d_action] = r_value
 
-        r_target[0, r_action] = r_value
         # update dynamic graph
-        history = self.__dynamic_graph.model.fit(state_in, r_target, verbose=0)
+        state_in_all = np.reshape(state_in_all, [-1, self.__params['NN']['input_shape'][1]])
+        history = self.__dynamic_graph.model.fit(state_in_all, r_d_action_probs, verbose=0)
         loss = history.history['loss'][0]
 
         self.__iternum += 1
