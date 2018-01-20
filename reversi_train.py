@@ -27,7 +27,6 @@ else:
 
 for i_episode in tqdm(range(params["max_epochs"])):
     observation = env.reset()
-    # observation  是 3 x 8 x 8 的 list,表示当前的棋局，具体定义在 reversi.py 中的 state
     current_game_info = gameInfo()
     current_reward = None
 
